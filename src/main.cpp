@@ -1,6 +1,5 @@
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_video.h"
-#include "core/mouse.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/trigonometric.hpp"
@@ -21,7 +20,6 @@ struct GameState {
   SDL_Window *window;
   SDL_GLContext glContext;
   KeyboardState keyboard;
-  MouseState mouse;
 
   std::unique_ptr<Shader> shader;
   std::unique_ptr<Camera> camera;
@@ -129,9 +127,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       break;
     }
     case SDL_EVENT_MOUSE_MOTION: {
-      state->mouse.relX = event->motion.xrel;
-      state->mouse.relY = event->motion.yrel;
-      state->camera->HandleMouseEvent(state->mouse);
+      state->camera->HandleMouseEvent(glm::vec2(event->motion.xrel, event->motion.yrel));
       break;
     }
   }
@@ -155,9 +151,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   state->shader->Unbind();
 
   SDL_GL_SwapWindow(state->window);
-
-  state->mouse.relX = 0.0f;
-  state->mouse.relY = 0.0f;
 
   return SDL_APP_CONTINUE;
 }

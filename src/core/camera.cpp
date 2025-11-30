@@ -42,10 +42,10 @@ void Camera::HandleKeyboardEvent(const KeyboardState &keyboard) {
   mView = glm::lookAt(mPosition, mPosition + mFront, mUp);
 }
 
-void Camera::HandleMouseEvent(const MouseState &mouse) {
+void Camera::HandleMouseEvent(const glm::vec2 &relative) {
   float turnSpeed = 0.1f;
-  mYaw += mouse.relX * turnSpeed;
-  mPitch -= mouse.relY * turnSpeed;
+  mYaw += relative.x * turnSpeed;
+  mPitch -= relative.y * turnSpeed;
 
   if (mPitch > 89.0f) {
     mPitch = 89.0f;
