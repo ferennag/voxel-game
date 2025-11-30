@@ -14,7 +14,7 @@
 #include "core/camera.h"
 #include "core/keyboard.h"
 #include "core/shader.h"
-#include "world/chunk.h"
+#include "world/world.h"
 
 struct GameState {
   SDL_Window *window;
@@ -25,7 +25,7 @@ struct GameState {
   std::unique_ptr<Camera> camera;
 
   glm::mat4 projection, model;
-  std::unique_ptr<Chunk> chunk;
+  std::unique_ptr<World> world;
 };
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
@@ -66,7 +66,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->window = window;
   state->glContext = glContext;
   state->shader = Shader::Load("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-  state->chunk = std::make_unique<Chunk>(glm::ivec3{0, 0, 0}, glm::ivec3{64, 64, 64}, 0);
+  state->world = std::make_unique<World>(0, glm::ivec3{64, 64, 64});
 
   state->model = glm::identity<glm::mat4>();
   state->camera = std::make_unique<Camera>(glm::vec3{0.0f, 50.0f, 100.0f});
@@ -146,8 +146,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   state->shader->Bind();
   state->shader->UniformMat4("projection", state->projection);
   state->shader->UniformMat4("view", state->camera->GetView());
-  state->shader->UniformMat4("model", state->model);
-  state->chunk->Render();
+  state->world->Render(*state->shader);
   state->shader->Unbind();
 
   SDL_GL_SwapWindow(state->window);

@@ -67,6 +67,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
+  ${PROJECT_SOURCE_DIR}/src
   ${imgui_SOURCE_DIR}
   ${fastnoiselite_SOURCE_DIR}/Cpp
 )
