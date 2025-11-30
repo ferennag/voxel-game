@@ -1,0 +1,6 @@
+IndentWidth: 2
+ColumnLimit: 120
+IndentCaseLabels: true
+AllowShortBlocksOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
