@@ -1,31 +1,45 @@
+#include "SDL3/SDL_mouse.h"
+#include "SDL3/SDL_video.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
 #include <GL/glew.h>
+#include <cmath>
 
 #define SDL_MAIN_USE_CALLBACKS
 #include "glm/ext/matrix_float4x4.hpp"
-#include "glm/ext/matrix_projection.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <memory>
 
 #include "core/shader.h"
+#include "world/chunk.h"
 
-GLfloat vertices[] = {
-    -0.5f, -0.5f, 0.0f,
+enum class Key {
+  Left,
+  Right,
+  Up,
+  Down,
+  Jump,
+  Crouch,
+  ALL,
+};
 
-    0.5f,  -0.5f, 0.0f,
-
-    0.0f,  0.5f,  0.0f,
+struct KeyboardState {
+  bool pressed[static_cast<long>(Key::ALL)];
 };
 
 struct GameState {
   SDL_Window *window;
   SDL_GLContext glContext;
+  KeyboardState keyboard;
   std::unique_ptr<Shader> shader;
-  GLuint vao, vbo;
   glm::mat4 projection, model, view;
+  std::unique_ptr<Chunk> chunk;
+  glm::vec3 cameraPosition, cameraFront, cameraUp;
+
+  float cameraYaw, cameraPitch;
 };
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
@@ -56,6 +70,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   SDL_GL_MakeCurrent(window, glContext);
   SDL_GL_SetSwapInterval(1);
 
+  SDL_SetWindowRelativeMouseMode(window, true);
+
   glewInit();
 
   GameState *state = new GameState();
@@ -64,17 +80,15 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->window = window;
   state->glContext = glContext;
   state->shader = Shader::Load("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-
-  glCreateVertexArrays(1, &state->vao);
-  glCreateBuffers(1, &state->vbo);
-  glBindVertexArray(state->vao);
-  glBindBuffer(GL_ARRAY_BUFFER, state->vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-  glEnableVertexAttribArray(0);
+  state->chunk = std::make_unique<Chunk>(glm::ivec3{0, 0, 0}, glm::ivec3{10, 1, 10}, 0);
 
   state->model = glm::identity<glm::mat4>();
-  state->view = glm::lookAt(glm::vec3{0.0f, 1.0f, -5.0f}, glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 1.0f, 0.0f});
+  state->cameraPosition = glm::vec3{0.0f, 0.0f, 25.0f};
+  state->cameraFront = glm::vec3{0.0f, 0.0f, -1.0f};
+  state->cameraUp = glm::vec3{0.0f, 1.0f, 0.0f};
+  state->view = glm::lookAt(state->cameraPosition, state->cameraFront, glm::vec3{0.0f, 1.0f, 0.0f});
+  state->cameraYaw = -90.0f;
+  state->cameraPitch = 0.0f;
 
   return SDL_APP_CONTINUE;
 }
@@ -93,13 +107,53 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
                                               static_cast<float>(height), 0.1f, 1000.0f);
       break;
     }
+    case SDL_EVENT_KEY_UP:
     case SDL_EVENT_KEY_DOWN: {
+      bool pressed = event->key.down;
       switch (event->key.key) {
         case SDLK_ESCAPE: {
           return SDL_APP_SUCCESS;
         }
+        case SDLK_W:
+        case SDLK_UP: {
+          state->keyboard.pressed[static_cast<int>(Key::Up)] = pressed;
+          break;
+        }
+        case SDLK_S:
+        case SDLK_DOWN: {
+          state->keyboard.pressed[static_cast<int>(Key::Down)] = pressed;
+          break;
+        }
+        case SDLK_A:
+        case SDLK_LEFT: {
+          state->keyboard.pressed[static_cast<int>(Key::Left)] = pressed;
+          break;
+        }
+        case SDLK_D:
+        case SDLK_RIGHT: {
+          state->keyboard.pressed[static_cast<int>(Key::Right)] = pressed;
+          break;
+        }
+        case SDLK_SPACE: {
+          state->keyboard.pressed[static_cast<int>(Key::Jump)] = pressed;
+          break;
+        }
       }
 
+      state->keyboard.pressed[static_cast<int>(Key::Crouch)] = pressed && (event->key.mod & SDL_KMOD_LCTRL);
+
+      break;
+    }
+    case SDL_EVENT_MOUSE_MOTION: {
+      state->cameraYaw += event->motion.xrel * 0.1f;
+      state->cameraPitch -= event->motion.yrel * 0.1f;
+
+      if (state->cameraPitch > 89.0f) {
+        state->cameraPitch = 89.0f;
+      }
+      if (state->cameraPitch < -89.0f) {
+        state->cameraPitch = -89.0f;
+      }
       break;
     }
   }
@@ -109,6 +163,42 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
   GameState *state = static_cast<GameState *>(appstate);
+
+  float speed = 0.2f;
+  if (state->keyboard.pressed[static_cast<int>(Key::Left)]) {
+    auto left = glm::normalize(glm::cross(state->cameraFront, state->cameraUp));
+    state->cameraPosition -= speed * left;
+  }
+
+  if (state->keyboard.pressed[static_cast<int>(Key::Right)]) {
+    auto left = glm::normalize(glm::cross(state->cameraFront, state->cameraUp));
+    state->cameraPosition += speed * left;
+  }
+
+  if (state->keyboard.pressed[static_cast<int>(Key::Up)]) {
+    state->cameraPosition += speed * state->cameraFront;
+  }
+
+  if (state->keyboard.pressed[static_cast<int>(Key::Down)]) {
+    state->cameraPosition -= speed * state->cameraFront;
+  }
+
+  if (state->keyboard.pressed[static_cast<int>(Key::Jump)]) {
+    state->cameraPosition += speed * state->cameraUp;
+  }
+
+  if (state->keyboard.pressed[static_cast<int>(Key::Crouch)]) {
+    state->cameraPosition -= speed * state->cameraUp;
+  }
+
+  glm::vec3 direction{};
+  direction.x = cos(glm::radians(state->cameraYaw)) * cos(glm::radians(state->cameraPitch));
+  direction.y = sin(glm::radians(state->cameraPitch));
+  direction.z = sin(glm::radians(state->cameraYaw)) * cos(glm::radians(state->cameraPitch));
+  state->cameraFront = glm::normalize(direction);
+
+  state->view = glm::lookAt(state->cameraPosition, state->cameraPosition + state->cameraFront, state->cameraUp);
+
   glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -116,8 +206,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   state->shader->UniformMat4("projection", state->projection);
   state->shader->UniformMat4("view", state->view);
   state->shader->UniformMat4("model", state->model);
-  glBindVertexArray(state->vao);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  state->chunk->Render();
   state->shader->Unbind();
 
   SDL_GL_SwapWindow(state->window);
@@ -127,8 +216,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   if (appstate) {
     GameState *state = static_cast<GameState *>(appstate);
-    glDeleteVertexArrays(1, &state->vao);
-    glDeleteBuffers(1, &state->vbo);
     delete state;
   }
 }
