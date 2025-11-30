@@ -3,13 +3,13 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-enum Tile {
+enum class Tile {
   Empty,
   Dirt,
   ALL
 };
 
-enum CubeFace {
+enum class CubeFace {
   Front,
   Back,
   Left,

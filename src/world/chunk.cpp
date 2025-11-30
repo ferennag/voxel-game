@@ -14,8 +14,7 @@ Chunk::Chunk(const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
   for (int z = 0; z < mDimensions.z; z++) {
     for (int y = 0; y < mDimensions.y; y++) {
       for (int x = 0; x < mDimensions.x; x++) {
-        // mTiles[x][y][z] = static_cast<Tile>(rand() % Tile::ALL);
-        mTiles[x][y][z] = Tile::Dirt;
+        mTiles[x][y][z] = static_cast<Tile>(rand() % static_cast<int>(Tile::ALL));
       }
     }
   }
@@ -86,7 +85,7 @@ void Chunk::Render() {
 
 void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
   switch (face) {
-    case Front: {
+    case CubeFace::Front: {
       mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
@@ -96,7 +95,7 @@ void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
       mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
       break;
     }
-    case Back: {
+    case CubeFace::Back: {
       mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
       mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
       mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}});
@@ -107,7 +106,7 @@ void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
       break;
     }
 
-    case Left: {
+    case CubeFace::Left: {
       mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
       mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
@@ -118,7 +117,7 @@ void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
       break;
     }
 
-    case Right: {
+    case CubeFace::Right: {
       mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
       mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
@@ -129,7 +128,7 @@ void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
       break;
     }
 
-    case Top: {
+    case CubeFace::Top: {
       mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
@@ -140,7 +139,7 @@ void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
       break;
     }
 
-    case Bottom: {
+    case CubeFace::Bottom: {
       mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
       mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
       mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});

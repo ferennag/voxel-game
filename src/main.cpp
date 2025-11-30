@@ -80,10 +80,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->window = window;
   state->glContext = glContext;
   state->shader = Shader::Load("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-  state->chunk = std::make_unique<Chunk>(glm::ivec3{0, 0, 0}, glm::ivec3{10, 1, 10}, 0);
+  state->chunk = std::make_unique<Chunk>(glm::ivec3{0, 0, 0}, glm::ivec3{64, 64, 64}, 0);
 
   state->model = glm::identity<glm::mat4>();
-  state->cameraPosition = glm::vec3{0.0f, 0.0f, 25.0f};
+  state->cameraPosition = glm::vec3{0.0f, 50.0f, 100.0f};
   state->cameraFront = glm::vec3{0.0f, 0.0f, -1.0f};
   state->cameraUp = glm::vec3{0.0f, 1.0f, 0.0f};
   state->view = glm::lookAt(state->cameraPosition, state->cameraFront, glm::vec3{0.0f, 1.0f, 0.0f});
