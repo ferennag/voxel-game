@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/texture.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
@@ -20,6 +21,7 @@ enum class CubeFace {
 
 struct Vertex {
   float position[3];
+  float textureCoords[2];
 };
 
 struct Chunk {
@@ -27,6 +29,7 @@ struct Chunk {
   int mSeed;
   Tile ***mTiles;
   std::vector<Vertex> mVertices;
+  std::shared_ptr<Texture> mTexture;
 
   GLuint mVao, mVbo;
 

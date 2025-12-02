@@ -1,4 +1,5 @@
 #include "chunk.h"
+#include <SDL3_image/SDL_image.h>
 #include <cstdlib>
 
 Chunk::Chunk(const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
@@ -19,6 +20,9 @@ Chunk::Chunk(const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
     }
   }
 
+  // TODO: As a next step:
+  // - implement an algorithm that joins adjacent vertexes
+  // - currently there are duplicated vertices, we should use indexing to reduce the number of vertices
   for (int z = 0; z < mDimensions.z; z++) {
     for (int y = 0; y < mDimensions.y; y++) {
       for (int x = 0; x < mDimensions.x; x++) {
@@ -54,13 +58,17 @@ Chunk::Chunk(const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
     }
   }
 
+  mTexture = Texture::Load("assets/textures/dirt.png");
+
   glCreateVertexArrays(1, &mVao);
   glCreateBuffers(1, &mVbo);
   glBindVertexArray(mVao);
   glBindBuffer(GL_ARRAY_BUFFER, mVbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * mVertices.size(), mVertices.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, position)));
   glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, textureCoords)));
+  glEnableVertexAttribArray(1);
 }
 
 Chunk::~Chunk() {
@@ -77,7 +85,8 @@ Chunk::~Chunk() {
 }
 
 void Chunk::Render() {
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  mTexture->Bind();
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glBindVertexArray(mVao);
   glDrawArrays(GL_TRIANGLES, 0, mVertices.size());
   glBindVertexArray(0);
@@ -86,67 +95,67 @@ void Chunk::Render() {
 void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
   switch (face) {
     case CubeFace::Front: {
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
       break;
     }
     case CubeFace::Back: {
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 1.0f}});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 1.0f}});
       break;
     }
 
     case CubeFace::Left: {
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 1.0f}});
 
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
       break;
     }
 
     case CubeFace::Right: {
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 1.0f}});
       break;
     }
 
     case CubeFace::Top: {
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 0.0f}});
 
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 0.0f}});
       break;
     }
 
     case CubeFace::Bottom: {
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 1.0f}});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
       break;
     }
   }

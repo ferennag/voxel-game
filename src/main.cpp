@@ -14,6 +14,7 @@
 #include "core/camera.h"
 #include "core/keyboard.h"
 #include "core/shader.h"
+#include "core/texture.h"
 #include "world/world.h"
 
 struct GameState {
@@ -59,6 +60,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   SDL_SetWindowRelativeMouseMode(window, true);
 
   glewInit();
+
+  glEnable(GL_MULTISAMPLE);
 
   GameState *state = new GameState();
   *appstate = state;
@@ -140,8 +143,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   state->camera->HandleKeyboardEvent(state->keyboard);
 
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_CULL_FACE);
 
   state->shader->Bind();
   state->shader->UniformMat4("projection", state->projection);
@@ -155,6 +160,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+  Texture::Cleanup();
   if (appstate) {
     GameState *state = static_cast<GameState *>(appstate);
     delete state;
