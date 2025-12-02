@@ -1,27 +1,15 @@
 #pragma once
 
 #include "core/texture.h"
+#include "cube.h"
+#include "texture_atlas.h"
+#include "tile.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-enum class Tile {
-  Empty,
-  Dirt,
-  ALL
-};
-
-enum class CubeFace {
-  Front,
-  Back,
-  Left,
-  Right,
-  Top,
-  Bottom
-};
-
 struct Vertex {
-  float position[3];
-  float textureCoords[2];
+  glm::vec3 position;
+  glm::vec2 textureCoords;
 };
 
 struct Chunk {
@@ -29,15 +17,15 @@ struct Chunk {
   int mSeed;
   Tile ***mTiles;
   std::vector<Vertex> mVertices;
-  std::shared_ptr<Texture> mTexture;
+  const TextureAtlas &mTextureAtlas;
 
   GLuint mVao, mVbo;
 
-  Chunk(const glm::ivec3 &postion, const glm::ivec3 &dimensions, int seed);
+  Chunk(const TextureAtlas &atlas, const glm::ivec3 &postion, const glm::ivec3 &dimensions, int seed);
   ~Chunk();
 
   void Render();
 
 private:
-  void AddCubeFace(CubeFace face, int x, int y, int z);
+  void AddCubeFace(Tile tile, CubeFace face, int x, int y, int z);
 };

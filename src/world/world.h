@@ -5,6 +5,7 @@
 
 #include "chunk.h"
 #include "core/shader.h"
+#include "texture_atlas.h"
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -19,6 +20,7 @@ private:
   int mSeed;
   glm::ivec3 mChunkDimensions;
   std::unordered_map<glm::ivec3, std::unique_ptr<Chunk>> mChunks;
+  std::unique_ptr<TextureAtlas> mTextureAtlas;
 
   void EnsureChunkExists(const glm::ivec3 &chunkPosition);
 };

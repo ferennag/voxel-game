@@ -2,8 +2,8 @@
 #include <SDL3_image/SDL_image.h>
 #include <cstdlib>
 
-Chunk::Chunk(const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
-    : mPosition(position), mDimensions(dimensions), mSeed(seed) {
+Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
+    : mPosition(position), mDimensions(dimensions), mSeed(seed), mTextureAtlas(atlas) {
   mTiles = new Tile **[mDimensions.x];
   for (int i = 0; i < mDimensions.x; i++) {
     mTiles[i] = new Tile *[mDimensions.y];
@@ -32,33 +32,31 @@ Chunk::Chunk(const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
         }
 
         if (y == 0 || mTiles[x][y - 1][z] == Tile::Empty) {
-          AddCubeFace(CubeFace::Top, x, y, z);
+          AddCubeFace(tile, CubeFace::Top, x, y, z);
         }
 
         if (y == mDimensions.y - 1 || mTiles[x][y + 1][z] == Tile::Empty) {
-          AddCubeFace(CubeFace::Bottom, x, y, z);
+          AddCubeFace(tile, CubeFace::Bottom, x, y, z);
         }
 
         if (x == 0 || mTiles[x - 1][y][z] == Tile::Empty) {
-          AddCubeFace(CubeFace::Left, x, y, z);
+          AddCubeFace(tile, CubeFace::Left, x, y, z);
         }
 
         if (x == mDimensions.x - 1 || mTiles[x + 1][y][z] == Tile::Empty) {
-          AddCubeFace(CubeFace::Right, x, y, z);
+          AddCubeFace(tile, CubeFace::Right, x, y, z);
         }
 
         if (z == 0 || mTiles[x][y][z - 1] == Tile::Empty) {
-          AddCubeFace(CubeFace::Back, x, y, z);
+          AddCubeFace(tile, CubeFace::Back, x, y, z);
         }
 
         if (z == mDimensions.z - 1 || mTiles[x][y][z + 1] == Tile::Empty) {
-          AddCubeFace(CubeFace::Front, x, y, z);
+          AddCubeFace(tile, CubeFace::Front, x, y, z);
         }
       }
     }
   }
-
-  mTexture = Texture::Load("assets/textures/dirt.png");
 
   glCreateVertexArrays(1, &mVao);
   glCreateBuffers(1, &mVbo);
@@ -85,77 +83,102 @@ Chunk::~Chunk() {
 }
 
 void Chunk::Render() {
-  mTexture->Bind();
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glBindVertexArray(mVao);
   glDrawArrays(GL_TRIANGLES, 0, mVertices.size());
   glBindVertexArray(0);
 }
 
-void Chunk::AddCubeFace(CubeFace face, int x, int y, int z) {
+void Chunk::AddCubeFace(Tile tile, CubeFace face, int x, int y, int z) {
+  TextureType textureType;
+  switch (tile) {
+    case Tile::Dirt:
+      textureType = TextureType::Dirt;
+      break;
+    case Tile::Sand:
+      textureType = TextureType::Sand;
+      break;
+    default:
+      textureType = TextureType::Dirt;
+      break;
+  }
+
+  auto texture = *mTextureAtlas.GetTexture(textureType);
+
+  glm::vec3 frontTopLeft = {x - 0.5f, y + 0.5f, z + 0.5f};
+  glm::vec3 frontTopRight = {x + 0.5f, y + 0.5f, z + 0.5f};
+  glm::vec3 frontBottomLeft = {x - 0.5f, y - 0.5f, z + 0.5f};
+  glm::vec3 frontBottomRight = {x + 0.5f, y - 0.5f, z + 0.5f};
+
+  glm::vec3 backTopLeft = {x - 0.5f, y + 0.5f, z - 0.5f};
+  glm::vec3 backTopRight = {x + 0.5f, y + 0.5f, z - 0.5f};
+  glm::vec3 backBottomLeft = {x - 0.5f, y - 0.5f, z - 0.5f};
+  glm::vec3 backBottomRight = {x + 0.5f, y - 0.5f, z - 0.5f};
+
   switch (face) {
     case CubeFace::Front: {
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomLeft()});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomRight()});
+      mVertices.push_back(Vertex{frontTopLeft, texture.TopLeft()});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomRight()});
+      mVertices.push_back(Vertex{frontTopRight, texture.TopRight()});
+      mVertices.push_back(Vertex{frontTopLeft, texture.TopLeft()});
       break;
     }
     case CubeFace::Back: {
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{backBottomLeft, texture.BottomRight()});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopRight()});
+      mVertices.push_back(Vertex{backTopRight, texture.TopLeft()});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{backTopRight, texture.TopLeft()});
+      mVertices.push_back(Vertex{backBottomRight, texture.BottomLeft()});
+      mVertices.push_back(Vertex{backBottomLeft, texture.BottomRight()});
       break;
     }
 
     case CubeFace::Left: {
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{backBottomLeft, texture.BottomLeft()});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
 
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
+      mVertices.push_back(Vertex{frontTopLeft, texture.TopRight()});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
       break;
     }
 
     case CubeFace::Right: {
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomLeft()});
+      mVertices.push_back(Vertex{backBottomRight, texture.BottomRight()});
+      mVertices.push_back(Vertex{frontTopRight, texture.TopLeft()});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 1.0f}});
+      mVertices.push_back(Vertex{frontTopRight, texture.TopLeft()});
+      mVertices.push_back(Vertex{backBottomRight, texture.BottomRight()});
+      mVertices.push_back(Vertex{backTopRight, texture.TopRight()});
       break;
     }
 
     case CubeFace::Top: {
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z + 0.5f}, {0.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{frontTopLeft, texture.BottomLeft()});
+      mVertices.push_back(Vertex{frontTopRight, texture.BottomRight()});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
 
-      mVertices.push_back(Vertex{{x - 0.5f, y + 0.5f, z - 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z + 0.5f}, {1.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y + 0.5f, z - 0.5f}, {1.0f, 0.0f}});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontTopRight, texture.BottomRight()});
+      mVertices.push_back(Vertex{backTopRight, texture.TopRight()});
+
       break;
     }
 
     case CubeFace::Bottom: {
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z - 0.5f}, {0.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 1.0f}});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
+      mVertices.push_back(Vertex{backBottomLeft, texture.TopRight()});
+      mVertices.push_back(Vertex{backBottomRight, texture.TopLeft()});
 
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z - 0.5f}, {1.0f, 1.0f}});
-      mVertices.push_back(Vertex{{x + 0.5f, y - 0.5f, z + 0.5f}, {1.0f, 0.0f}});
-      mVertices.push_back(Vertex{{x - 0.5f, y - 0.5f, z + 0.5f}, {0.0f, 0.0f}});
+      mVertices.push_back(Vertex{backBottomRight, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomLeft()});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
       break;
     }
   }

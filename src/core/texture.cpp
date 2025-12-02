@@ -12,6 +12,8 @@ std::shared_ptr<Texture> Texture::Load(const std::string &path) {
     return nullptr;
   }
 
+  glm::ivec2 dimensions{image->w, image->h};
+
   if (sTextures.contains(path)) {
     return sTextures[path];
   }
@@ -26,7 +28,7 @@ std::shared_ptr<Texture> Texture::Load(const std::string &path) {
   glGenerateMipmap(GL_TEXTURE_2D);
   SDL_DestroySurface(image);
 
-  auto result = std::make_shared<Texture>(texture);
+  auto result = std::make_shared<Texture>(texture, dimensions);
   sTextures[path] = result;
   return result;
 }
@@ -35,7 +37,7 @@ void Texture::Cleanup() {
   sTextures.clear();
 }
 
-Texture::Texture(GLuint id) : mId(id) {
+Texture::Texture(GLuint id, const glm::ivec2 &dimensions) : mId(id), mDimensions(dimensions) {
 }
 
 Texture::~Texture() {
