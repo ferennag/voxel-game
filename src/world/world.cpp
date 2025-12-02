@@ -26,7 +26,9 @@ World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), m
     for (int y = -dim.y; y < dim.y; ++y) {
       for (int z = -dim.z; z < dim.z; ++z) {
         auto *thread = EnsureChunkExists({x, y, z});
-        threads.push_back(thread);
+        if (thread != nullptr) {
+          threads.push_back(thread);
+        }
       }
     }
   }
@@ -61,8 +63,7 @@ SDL_Thread *World::EnsureChunkExists(const glm::ivec3 &chunkPosition) {
 
   mChunks.insert(std::make_pair(chunkPosition, chunk));
 
-  SDL_Thread *thread = SDL_CreateThread(GenerateChunkVertices, "GenerateChunkVertices", (void *)chunk);
-  return thread;
+  return SDL_CreateThread(GenerateChunkVertices, "GenerateChunkVertices", (void *)chunk);
 }
 
 void World::Render(const Shader &shader) {

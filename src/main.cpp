@@ -72,7 +72,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->world = std::make_unique<World>(0, glm::ivec3{64, 64, 64});
 
   state->model = glm::identity<glm::mat4>();
-  state->camera = std::make_unique<Camera>(glm::vec3{0.0f, 50.0f, 100.0f});
+  state->camera = std::make_unique<Camera>(glm::vec3{0.0f, 100.0f, 100.0f});
 
   return SDL_APP_CONTINUE;
 }
