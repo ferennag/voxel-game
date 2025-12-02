@@ -12,15 +12,15 @@
 class World {
 public:
   World(const int seed, const glm::ivec3 &chunkDimensions);
-  ~World() = default;
+  ~World();
 
   void Render(const Shader &shader);
 
 private:
   int mSeed;
   glm::ivec3 mChunkDimensions;
-  std::unordered_map<glm::ivec3, std::unique_ptr<Chunk>> mChunks;
+  std::unordered_map<glm::ivec3, Chunk *> mChunks;
   std::unique_ptr<TextureAtlas> mTextureAtlas;
 
-  void EnsureChunkExists(const glm::ivec3 &chunkPosition);
+  SDL_Thread *EnsureChunkExists(const glm::ivec3 &chunkPosition);
 };

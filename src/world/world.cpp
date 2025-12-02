@@ -1,8 +1,15 @@
 #include "world.h"
+#include "SDL3/SDL_thread.h"
 #include "core/profiler.h"
 #include "glm/ext/matrix_transform.hpp"
 #include <memory>
 #include <utility>
+
+int GenerateChunkVertices(void *data) {
+  Chunk *chunk = static_cast<Chunk *>(data);
+  chunk->GenerateVertices();
+  return 0;
+}
 
 World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), mChunkDimensions(chunkDimensions) {
   auto profiler = Profiler::Create();
@@ -14,25 +21,48 @@ World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), m
 
   glm::ivec3 dim = {2, 1, 2};
 
+  std::vector<SDL_Thread *> threads;
   for (int x = -dim.x; x < dim.x; ++x) {
     for (int y = -dim.y; y < dim.y; ++y) {
       for (int z = -dim.z; z < dim.z; ++z) {
-        EnsureChunkExists({x, y, z});
-        profiler.LogSnapshot("Chunk generation");
+        auto *thread = EnsureChunkExists({x, y, z});
+        threads.push_back(thread);
       }
     }
+  }
+  profiler.LogSnapshot("Chunk generation");
+
+  for (auto *thread : threads) {
+    int status;
+    SDL_WaitThread(thread, &status);
+  }
+
+  for (auto &entry : mChunks) {
+    entry.second->SetupVAO();
   }
 
   profiler.LogEnd("World building completed");
 }
 
-void World::EnsureChunkExists(const glm::ivec3 &chunkPosition) {
-  if (mChunks.contains(chunkPosition)) {
-    return;
+World::~World() {
+  for (auto &entry : mChunks) {
+    delete entry.second;
   }
 
-  mChunks.insert(
-      std::make_pair(chunkPosition, std::make_unique<Chunk>(*mTextureAtlas, chunkPosition, mChunkDimensions, mSeed)));
+  mChunks.clear();
+}
+
+SDL_Thread *World::EnsureChunkExists(const glm::ivec3 &chunkPosition) {
+  if (mChunks.contains(chunkPosition)) {
+    return nullptr;
+  }
+
+  auto *chunk = new Chunk(*mTextureAtlas, chunkPosition, mChunkDimensions, mSeed);
+
+  mChunks.insert(std::make_pair(chunkPosition, chunk));
+
+  SDL_Thread *thread = SDL_CreateThread(GenerateChunkVertices, "GenerateChunkVertices", (void *)chunk);
+  return thread;
 }
 
 void World::Render(const Shader &shader) {

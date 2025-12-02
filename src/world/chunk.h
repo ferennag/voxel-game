@@ -24,6 +24,9 @@ struct Chunk {
   Chunk(const TextureAtlas &atlas, const glm::ivec3 &postion, const glm::ivec3 &dimensions, int seed);
   ~Chunk();
 
+  void GenerateVertices();
+  void SetupVAO();
+
   void Render();
 
 private:

@@ -5,6 +5,9 @@
 
 Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
     : mPosition(position), mDimensions(dimensions), mSeed(seed), mTextureAtlas(atlas) {
+}
+
+void Chunk::GenerateVertices() {
   mTiles = new Tile **[mDimensions.x];
   for (int i = 0; i < mDimensions.x; i++) {
     mTiles[i] = new Tile *[mDimensions.y];
@@ -59,8 +62,10 @@ Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::i
     }
   }
 
-  SDL_Log("Chunk (%d, %d, %d): %zu vertices", position.x, position.y, position.z, mVertices.size());
+  SDL_Log("Chunk (%d, %d, %d): %zu vertices", mPosition.x, mPosition.y, mPosition.z, mVertices.size());
+}
 
+void Chunk::SetupVAO() {
   glCreateVertexArrays(1, &mVao);
   glCreateBuffers(1, &mVbo);
   glBindVertexArray(mVao);
