@@ -1,23 +1,29 @@
 #include "world.h"
+#include "core/profiler.h"
 #include "glm/ext/matrix_transform.hpp"
 #include <memory>
 #include <utility>
 
 World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), mChunkDimensions(chunkDimensions) {
-
+  auto profiler = Profiler::Create();
   TextureAtlasBuilder atlasBuilder(16);
   atlasBuilder.AddTexture(TextureType::Dirt, "assets/textures/dirt.png");
   atlasBuilder.AddTexture(TextureType::Sand, "assets/textures/sand.png");
-
   mTextureAtlas = atlasBuilder.Build();
+  profiler.LogSnapshot("TextureAtlas build");
 
-  for (int x = -1; x < 1; ++x) {
-    for (int y = 0; y < 1; ++y) {
-      for (int z = -1; z < 1; ++z) {
+  glm::ivec3 dim = {2, 1, 2};
+
+  for (int x = -dim.x; x < dim.x; ++x) {
+    for (int y = -dim.y; y < dim.y; ++y) {
+      for (int z = -dim.z; z < dim.z; ++z) {
         EnsureChunkExists({x, y, z});
+        profiler.LogSnapshot("Chunk generation");
       }
     }
   }
+
+  profiler.LogEnd("World building completed");
 }
 
 void World::EnsureChunkExists(const glm::ivec3 &chunkPosition) {

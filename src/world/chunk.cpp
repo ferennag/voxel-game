@@ -1,4 +1,5 @@
 #include "chunk.h"
+#include "SDL3/SDL_log.h"
 #include <SDL3_image/SDL_image.h>
 #include <cstdlib>
 
@@ -57,6 +58,8 @@ Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::i
       }
     }
   }
+
+  SDL_Log("Chunk (%d, %d, %d): %zu vertices", position.x, position.y, position.z, mVertices.size());
 
   glCreateVertexArrays(1, &mVao);
   glCreateBuffers(1, &mVbo);
