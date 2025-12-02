@@ -69,7 +69,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->window = window;
   state->glContext = glContext;
   state->shader = Shader::Load("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-  state->world = std::make_unique<World>(0, glm::ivec3{64, 1, 64});
+  state->world = std::make_unique<World>(0, glm::ivec3{64, 64, 64});
 
   state->model = glm::identity<glm::mat4>();
   state->camera = std::make_unique<Camera>(glm::vec3{0.0f, 50.0f, 100.0f});

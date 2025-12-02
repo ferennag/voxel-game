@@ -31,11 +31,11 @@ Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::i
           continue;
         }
 
-        if (y == 0 || mTiles[x][y - 1][z] == Tile::Empty) {
+        if (y == (mDimensions.y - 1) || mTiles[x][y + 1][z] == Tile::Empty) {
           AddCubeFace(tile, CubeFace::Top, x, y, z);
         }
 
-        if (y == mDimensions.y - 1 || mTiles[x][y + 1][z] == Tile::Empty) {
+        if (y == 0 || mTiles[x][y - 1][z] == Tile::Empty) {
           AddCubeFace(tile, CubeFace::Bottom, x, y, z);
         }
 
