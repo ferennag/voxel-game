@@ -70,7 +70,7 @@ void World::Render(const Shader &shader) {
   mTextureAtlas->Bind();
 
   for (auto &pair : mChunks) {
-    const glm::vec3 translationVector = pair.second->mPosition * mChunkDimensions;
+    glm::vec3 translationVector = pair.second->mPosition * mChunkDimensions;
     const glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), translationVector);
 
     shader.UniformMat4("model", model);

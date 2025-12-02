@@ -1,8 +1,8 @@
 #pragma once
 
 enum class Tile {
-  Empty,
   Dirt,
   Sand,
+  Empty,
   ALL
 };
