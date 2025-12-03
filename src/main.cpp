@@ -17,6 +17,15 @@
 #include "core/texture.h"
 #include "world/world.h"
 
+#ifdef _WIN32
+#include <Wincon.h>
+
+extern "C" {
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;       // Optimus: force switch to discrete GPU
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1; // AMD
+}
+#endif
+
 struct GameState {
   SDL_Window *window;
   SDL_GLContext glContext;
