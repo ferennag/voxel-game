@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <cassert>
 #include <glm/glm.hpp>
 
 TextureAtlasBuilder::TextureAtlasBuilder(const int tileSize) : mTileSize(tileSize) {
@@ -28,8 +29,9 @@ std::unique_ptr<TextureAtlas> TextureAtlasBuilder::Build() {
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_CLAMP, GL_CLAMP_TO_EDGE);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
   std::vector<TextureAtlasEntry> entries;
@@ -40,14 +42,17 @@ std::unique_ptr<TextureAtlas> TextureAtlasBuilder::Build() {
     glTextureSubImage2D(texture, 0, offsetX, offsetY, mTileSize, mTileSize, GL_RGBA, GL_UNSIGNED_BYTE,
                         entry.image->pixels);
 
+    // TODO: Here we are removing 1px from all sides of the texture to prevent a black artifact around the edges of the
+    // texture There is probably a better way to do it, e.g. to create textures with +2 on both sides, repeating the
+    // textures outer 1 pixel, essentially adding a border to the texture.
     entries.push_back({
         .type = entry.type,
-        .start = {offsetX / size, offsetY / size},
-        .end = {(offsetX + mTileSize) / size, (offsetY + mTileSize) / size},
+        .start = {(offsetX + 1) / size, (offsetY + 1) / size},
+        .end = {(offsetX + mTileSize - 1) / size, (offsetY + mTileSize - 1) / size},
     });
 
     offsetX += mTileSize;
-    if (offsetX >= size) {
+    if (offsetX + mTileSize >= size) {
       offsetX = 0;
       offsetY += mTileSize;
     }
@@ -60,7 +65,30 @@ std::unique_ptr<TextureAtlas> TextureAtlasBuilder::Build() {
   return std::make_unique<TextureAtlas>(texture, entries);
 }
 
-void TextureAtlas::Bind() const {
+void TextureAtlas::Bind(const unsigned int unit) const {
+  switch (unit) {
+    case 0:
+      glActiveTexture(GL_TEXTURE0);
+      break;
+    case 1:
+      glActiveTexture(GL_TEXTURE1);
+      break;
+    case 2:
+      glActiveTexture(GL_TEXTURE1);
+      break;
+    case 3:
+      glActiveTexture(GL_TEXTURE1);
+      break;
+    case 4:
+      glActiveTexture(GL_TEXTURE1);
+      break;
+    case 5:
+      glActiveTexture(GL_TEXTURE1);
+      break;
+    default:
+      assert(unit <= 5);
+      break;
+  }
   glBindTexture(GL_TEXTURE_2D, mId);
 }
 

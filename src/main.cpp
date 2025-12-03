@@ -38,7 +38,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   SDL_Window *window =
       SDL_CreateWindow("Voxel Game", 1024, 768, SDL_WINDOW_MAXIMIZED | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);

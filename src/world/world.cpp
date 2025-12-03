@@ -69,7 +69,7 @@ SDL_Thread *World::EnsureChunkExists(const glm::ivec3 &chunkPosition) {
 }
 
 void World::Render(const Shader &shader) {
-  mTextureAtlas->Bind();
+  mTextureAtlas->Bind(0);
 
   for (auto &pair : mChunks) {
     glm::vec3 translationVector = pair.second->mPosition * mChunkDimensions;

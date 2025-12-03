@@ -31,7 +31,7 @@ public:
   TextureAtlas(const GLuint id, const std::vector<TextureAtlasEntry> &entries);
   ~TextureAtlas();
 
-  void Bind() const;
+  void Bind(const unsigned int unit) const;
 
   std::optional<TextureAtlasEntry> GetTexture(const TextureType type) const;
 };
