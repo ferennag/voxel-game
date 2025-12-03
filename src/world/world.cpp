@@ -6,8 +6,10 @@
 #include <utility>
 
 int GenerateChunkVertices(void *data) {
+  auto profiler = Profiler::Create();
   Chunk *chunk = static_cast<Chunk *>(data);
   chunk->GenerateVertices();
+  profiler.LogEnd("Chunk generated");
   return 0;
 }
 

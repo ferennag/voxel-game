@@ -5,7 +5,19 @@
 #include "texture_atlas.h"
 #include "tile.h"
 #include <GL/glew.h>
+#include <cstdint>
 #include <glm/glm.hpp>
+
+typedef uint64_t u64;
+
+struct VoxelGrid {
+  static const int SIZE = 64;
+  u64 columns[SIZE * SIZE];
+
+  bool operator()(int x, int y, int z) const {
+    return columns[x * SIZE + z] & (1 << y);
+  }
+};
 
 struct Vertex {
   glm::vec3 position;
@@ -13,9 +25,9 @@ struct Vertex {
 };
 
 struct Chunk {
+  VoxelGrid mGrid;
   glm::ivec3 mPosition, mDimensions;
   int mSeed;
-  Tile ***mTiles;
   std::vector<Vertex> mVertices;
   const TextureAtlas &mTextureAtlas;
 

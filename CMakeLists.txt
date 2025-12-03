@@ -62,6 +62,7 @@ file(GLOB_RECURSE SOURCES
 # endforeach()
 
 add_executable(${PROJECT_NAME}
+  ${fastnoiselite_SOURCE_DIR}/Cpp/FastNoiseLite.h
   ${SOURCES}
   ${IMGUI_SOURCES}
 )

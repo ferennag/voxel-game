@@ -1,28 +1,37 @@
 #include "chunk.h"
 #include "SDL3/SDL_log.h"
+#include <FastNoiseLite.h>
 #include <SDL3_image/SDL_image.h>
-#include <cstdlib>
 
 Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
     : mPosition(position), mDimensions(dimensions), mSeed(seed), mTextureAtlas(atlas) {
 }
 
 void Chunk::GenerateVertices() {
-  mTiles = new Tile **[mDimensions.x];
-  for (int i = 0; i < mDimensions.x; i++) {
-    mTiles[i] = new Tile *[mDimensions.y];
-    for (int j = 0; j < mDimensions.y; j++) {
-      mTiles[i][j] = new Tile[mDimensions.z];
+  VoxelGrid grid;
+
+  FastNoiseLite noise;
+  noise.SetSeed(mSeed);
+  noise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+  noise.SetFrequency(0.010);
+  noise.SetFractalType(FastNoiseLite::FractalType_FBm);
+
+  for (int z = 0; z < VoxelGrid::SIZE; ++z) {
+    for (int x = 0; x < VoxelGrid::SIZE; ++x) {
+      float nX = static_cast<float>(mPosition.x) * VoxelGrid::SIZE + static_cast<float>(x);
+      float nY = static_cast<float>(mPosition.y) * VoxelGrid::SIZE;
+      float nZ = static_cast<float>(mPosition.z) * VoxelGrid::SIZE + static_cast<float>(z);
+      float value = noise.GetNoise(nX, nY, nZ);
+      // Normalize the noise value between 0.0f, and 1.0f
+      value = (value + 1.0f / 2.0f);
+
+      int height = std::floor(value * VoxelGrid::SIZE);
+      u64 column = (1 << height) - 1;
+      grid.columns[x * VoxelGrid::SIZE + z] = column;
     }
   }
 
-  for (int z = 0; z < mDimensions.z; z++) {
-    for (int y = 0; y < mDimensions.y; y++) {
-      for (int x = 0; x < mDimensions.x; x++) {
-        mTiles[x][y][z] = static_cast<Tile>(rand() % static_cast<int>(Tile::ALL));
-      }
-    }
-  }
+  mGrid = grid;
 
   // TODO: As a next step:
   // - implement an algorithm that joins adjacent vertexes
@@ -30,32 +39,32 @@ void Chunk::GenerateVertices() {
   for (int z = 0; z < mDimensions.z; z++) {
     for (int y = 0; y < mDimensions.y; y++) {
       for (int x = 0; x < mDimensions.x; x++) {
-        const auto tile = mTiles[x][y][z];
-        if (tile == Tile::Empty) {
+        const auto tile = Tile::Dirt;
+        if (!grid(x, y, z)) {
           continue;
         }
 
-        if (y == (mDimensions.y - 1) || mTiles[x][y + 1][z] == Tile::Empty) {
+        if (y == (mDimensions.y - 1) || !grid(x, y + 1, z)) {
           AddCubeFace(tile, CubeFace::Top, x, y, z);
         }
 
-        if (y == 0 || mTiles[x][y - 1][z] == Tile::Empty) {
+        if (y == 0 || !grid(x, y - 1, z)) {
           AddCubeFace(tile, CubeFace::Bottom, x, y, z);
         }
 
-        if (x == 0 || mTiles[x - 1][y][z] == Tile::Empty) {
+        if (x == 0 || !grid(x - 1, y, z)) {
           AddCubeFace(tile, CubeFace::Left, x, y, z);
         }
 
-        if (x == mDimensions.x - 1 || mTiles[x + 1][y][z] == Tile::Empty) {
+        if (x == mDimensions.x - 1 || !grid(x + 1, y, z)) {
           AddCubeFace(tile, CubeFace::Right, x, y, z);
         }
 
-        if (z == 0 || mTiles[x][y][z - 1] == Tile::Empty) {
+        if (z == 0 || !grid(x, y, z - 1)) {
           AddCubeFace(tile, CubeFace::Back, x, y, z);
         }
 
-        if (z == mDimensions.z - 1 || mTiles[x][y][z + 1] == Tile::Empty) {
+        if (z == mDimensions.z - 1 || !grid(x, y, z + 1)) {
           AddCubeFace(tile, CubeFace::Front, x, y, z);
         }
       }
@@ -78,14 +87,6 @@ void Chunk::SetupVAO() {
 }
 
 Chunk::~Chunk() {
-  for (int x = 0; x < mDimensions.x; x++) {
-    for (int y = 0; y < mDimensions.y; y++) {
-      delete[] mTiles[x][y];
-    }
-    delete[] mTiles[x];
-  }
-
-  delete[] mTiles;
   glDeleteVertexArrays(1, &mVao);
   glDeleteBuffers(1, &mVbo);
 }
