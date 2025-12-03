@@ -29,6 +29,12 @@ struct GameState {
   std::unique_ptr<World> world;
 };
 
+void GLAPIENTRY OpenGLOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                                     const GLchar *message, const void *userParam) {
+  SDL_Log("GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+          (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+}
+
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
@@ -63,6 +69,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
 
   glewInit();
 
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(OpenGLOutputCallback, 0);
   glEnable(GL_MULTISAMPLE);
 
   GameState *state = new GameState();
