@@ -34,11 +34,13 @@ void Chunk::GenerateVertices() {
   mGrid = grid;
 
   // TODO: As a next step:
-  // - implement an algorithm that joins adjacent vertexes
+  // - implement Greedy Meshing algorithm
   // - currently there are duplicated vertices, we should use indexing to reduce the number of vertices
   for (int z = 0; z < mDimensions.z; z++) {
     for (int y = 0; y < mDimensions.y; y++) {
       for (int x = 0; x < mDimensions.x; x++) {
+        // TODO: hardcode the tile to dirt for now. I need to separate the vertex information from the texture
+        // information
         const auto tile = Tile::Dirt;
         if (!grid(x, y, z)) {
           continue;

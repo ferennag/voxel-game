@@ -17,11 +17,11 @@ World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), m
   auto profiler = Profiler::Create();
   TextureAtlasBuilder atlasBuilder(16);
   atlasBuilder.AddTexture(TextureType::Dirt, "assets/textures/dirt.png");
-  atlasBuilder.AddTexture(TextureType::Sand, "assets/textures/sand.png");
+  // atlasBuilder.AddTexture(TextureType::Dirt, "assets/textures/sand.png");
   mTextureAtlas = atlasBuilder.Build();
   profiler.LogSnapshot("TextureAtlas build");
 
-  glm::ivec3 dim = {2, 1, 2};
+  glm::ivec3 dim = {5, 1, 5};
 
   std::vector<SDL_Thread *> threads;
   for (int x = -dim.x; x < dim.x; ++x) {

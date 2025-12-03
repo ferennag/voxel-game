@@ -12,7 +12,7 @@ Camera::Camera(const glm::vec3 &position) : mPosition(position) {
 }
 
 void Camera::HandleKeyboardEvent(const KeyboardState &keyboard) {
-  float speed = 0.2f;
+  float speed = 0.5f;
   if (keyboard.pressed[static_cast<int>(Key::Left)]) {
     auto left = glm::normalize(glm::cross(mFront, mUp));
     mPosition -= speed * left;
