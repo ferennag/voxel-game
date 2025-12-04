@@ -86,6 +86,8 @@ void Chunk::SetupVAO() {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, textureCoords)));
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
+  glEnableVertexAttribArray(2);
 }
 
 Chunk::~Chunk() {
@@ -126,70 +128,77 @@ void Chunk::AddCubeFace(Tile tile, CubeFace face, int x, int y, int z) {
   glm::vec3 backBottomLeft = {x - 0.5f, y - 0.5f, z - 0.5f};
   glm::vec3 backBottomRight = {x + 0.5f, y - 0.5f, z - 0.5f};
 
+  glm::vec3 normalTop = {0.0, 1.0, 0.0};
+  glm::vec3 normalBottom = {0.0, -1.0, 0.0};
+  glm::vec3 normalLeft = {-1.0, 0.0, 0.0};
+  glm::vec3 normalRight = {1.0, 0.0, 0.0};
+  glm::vec3 normalFront = {0.0, 0.0, -1.0};
+  glm::vec3 normalBack = {0.0, 0.0, 1.0};
+
   switch (face) {
     case CubeFace::Front: {
-      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomLeft()});
-      mVertices.push_back(Vertex{frontBottomRight, texture.BottomRight()});
-      mVertices.push_back(Vertex{frontTopLeft, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomLeft(), normalFront});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomRight(), normalFront});
+      mVertices.push_back(Vertex{frontTopLeft, texture.TopLeft(), normalFront});
 
-      mVertices.push_back(Vertex{frontBottomRight, texture.BottomRight()});
-      mVertices.push_back(Vertex{frontTopRight, texture.TopRight()});
-      mVertices.push_back(Vertex{frontTopLeft, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomRight(), normalFront});
+      mVertices.push_back(Vertex{frontTopRight, texture.TopRight(), normalFront});
+      mVertices.push_back(Vertex{frontTopLeft, texture.TopLeft(), normalFront});
       break;
     }
     case CubeFace::Back: {
-      mVertices.push_back(Vertex{backBottomLeft, texture.BottomRight()});
-      mVertices.push_back(Vertex{backTopLeft, texture.TopRight()});
-      mVertices.push_back(Vertex{backTopRight, texture.TopLeft()});
+      mVertices.push_back(Vertex{backBottomLeft, texture.BottomRight(), normalBack});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopRight(), normalBack});
+      mVertices.push_back(Vertex{backTopRight, texture.TopLeft(), normalBack});
 
-      mVertices.push_back(Vertex{backTopRight, texture.TopLeft()});
-      mVertices.push_back(Vertex{backBottomRight, texture.BottomLeft()});
-      mVertices.push_back(Vertex{backBottomLeft, texture.BottomRight()});
+      mVertices.push_back(Vertex{backTopRight, texture.TopLeft(), normalBack});
+      mVertices.push_back(Vertex{backBottomRight, texture.BottomLeft(), normalBack});
+      mVertices.push_back(Vertex{backBottomLeft, texture.BottomRight(), normalBack});
       break;
     }
 
     case CubeFace::Left: {
-      mVertices.push_back(Vertex{backBottomLeft, texture.BottomLeft()});
-      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
-      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
+      mVertices.push_back(Vertex{backBottomLeft, texture.BottomLeft(), normalLeft});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight(), normalLeft});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft(), normalLeft});
 
-      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
-      mVertices.push_back(Vertex{frontTopLeft, texture.TopRight()});
-      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight(), normalLeft});
+      mVertices.push_back(Vertex{frontTopLeft, texture.TopRight(), normalLeft});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft(), normalLeft});
       break;
     }
 
     case CubeFace::Right: {
-      mVertices.push_back(Vertex{frontBottomRight, texture.BottomLeft()});
-      mVertices.push_back(Vertex{backBottomRight, texture.BottomRight()});
-      mVertices.push_back(Vertex{frontTopRight, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomLeft(), normalRight});
+      mVertices.push_back(Vertex{backBottomRight, texture.BottomRight(), normalRight});
+      mVertices.push_back(Vertex{frontTopRight, texture.TopLeft(), normalRight});
 
-      mVertices.push_back(Vertex{frontTopRight, texture.TopLeft()});
-      mVertices.push_back(Vertex{backBottomRight, texture.BottomRight()});
-      mVertices.push_back(Vertex{backTopRight, texture.TopRight()});
+      mVertices.push_back(Vertex{frontTopRight, texture.TopLeft(), normalRight});
+      mVertices.push_back(Vertex{backBottomRight, texture.BottomRight(), normalRight});
+      mVertices.push_back(Vertex{backTopRight, texture.TopRight(), normalRight});
       break;
     }
 
     case CubeFace::Top: {
-      mVertices.push_back(Vertex{frontTopLeft, texture.BottomLeft()});
-      mVertices.push_back(Vertex{frontTopRight, texture.BottomRight()});
-      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontTopLeft, texture.BottomLeft(), normalTop});
+      mVertices.push_back(Vertex{frontTopRight, texture.BottomRight(), normalTop});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft(), normalTop});
 
-      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft()});
-      mVertices.push_back(Vertex{frontTopRight, texture.BottomRight()});
-      mVertices.push_back(Vertex{backTopRight, texture.TopRight()});
+      mVertices.push_back(Vertex{backTopLeft, texture.TopLeft(), normalTop});
+      mVertices.push_back(Vertex{frontTopRight, texture.BottomRight(), normalTop});
+      mVertices.push_back(Vertex{backTopRight, texture.TopRight(), normalTop});
 
       break;
     }
 
     case CubeFace::Bottom: {
-      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
-      mVertices.push_back(Vertex{backBottomLeft, texture.TopRight()});
-      mVertices.push_back(Vertex{backBottomRight, texture.TopLeft()});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight(), normalBottom});
+      mVertices.push_back(Vertex{backBottomLeft, texture.TopRight(), normalBottom});
+      mVertices.push_back(Vertex{backBottomRight, texture.TopLeft(), normalBottom});
 
-      mVertices.push_back(Vertex{backBottomRight, texture.TopLeft()});
-      mVertices.push_back(Vertex{frontBottomRight, texture.BottomLeft()});
-      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight()});
+      mVertices.push_back(Vertex{backBottomRight, texture.TopLeft(), normalBottom});
+      mVertices.push_back(Vertex{frontBottomRight, texture.BottomLeft(), normalBottom});
+      mVertices.push_back(Vertex{frontBottomLeft, texture.BottomRight(), normalBottom});
       break;
     }
   }

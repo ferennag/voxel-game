@@ -66,3 +66,7 @@ void Camera::HandleMouseEvent(const glm::vec2 &relative) {
 glm::mat4 Camera::GetView() const {
   return mView;
 }
+
+glm::vec3 Camera::GetPosition() const {
+  return mPosition;
+}

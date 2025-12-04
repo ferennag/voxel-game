@@ -12,6 +12,7 @@ public:
   void HandleKeyboardEvent(const KeyboardState &keyboard);
 
   glm::mat4 GetView() const;
+  glm::vec3 GetPosition() const;
 
 private:
   glm::vec3 mPosition, mFront, mUp;

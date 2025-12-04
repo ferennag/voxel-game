@@ -126,3 +126,13 @@ void Shader::UniformMat4(const std::string &name, const glm::mat4 &value) const 
 
   glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
 }
+
+void Shader::UniformVec3(const std::string &name, const glm::vec3 &value) const {
+  auto location = glGetUniformLocation(mId, name.c_str());
+  if (location < 0) {
+    SDL_Log("Could not find uniform location %s", name.c_str());
+    return;
+  }
+
+  glUniform3fv(location, 1, &value[0]);
+}

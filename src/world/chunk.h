@@ -22,6 +22,7 @@ struct VoxelGrid {
 struct Vertex {
   glm::vec3 position;
   glm::vec2 textureCoords;
+  glm::vec3 normal;
 };
 
 struct Chunk {

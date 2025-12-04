@@ -33,6 +33,7 @@ struct GameState {
 
   std::unique_ptr<Shader> shader;
   std::unique_ptr<Camera> camera;
+  glm::vec3 sunPosition;
 
   glm::mat4 projection, model;
   std::unique_ptr<World> world;
@@ -88,10 +89,15 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->window = window;
   state->glContext = glContext;
   state->shader = Shader::Load("assets/shaders/basic.vert", "assets/shaders/basic.frag");
+  if (!state->shader) {
+    return SDL_APP_FAILURE;
+  }
+
   state->world = std::make_unique<World>(0, glm::ivec3{64, 64, 64});
 
   state->model = glm::identity<glm::mat4>();
   state->camera = std::make_unique<Camera>(glm::vec3{0.0f, 100.0f, 100.0f});
+  state->sunPosition = {20.0f, 200.0f, -20.0f};
 
   return SDL_APP_CONTINUE;
 }
@@ -172,6 +178,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   state->shader->Bind();
   state->shader->UniformMat4("projection", state->projection);
   state->shader->UniformMat4("view", state->camera->GetView());
+  state->shader->UniformVec3("sunPosition", state->sunPosition);
+  state->shader->UniformVec3("eye", state->camera->GetPosition());
   state->world->Render(*state->shader);
   state->shader->Unbind();
 
