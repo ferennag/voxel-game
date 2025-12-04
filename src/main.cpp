@@ -15,6 +15,7 @@
 #include "core/keyboard.h"
 #include "core/shader.h"
 #include "core/texture.h"
+#include "world/sky.h"
 #include "world/world.h"
 
 #ifdef _WIN32
@@ -37,6 +38,8 @@ struct GameState {
 
   glm::mat4 projection, model;
   std::unique_ptr<World> world;
+
+  std::unique_ptr<Sky> sky;
 };
 
 void GLAPIENTRY OpenGLOutputCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
@@ -98,6 +101,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
   state->model = glm::identity<glm::mat4>();
   state->camera = std::make_unique<Camera>(glm::vec3{0.0f, 100.0f, 100.0f});
   state->sunPosition = {20.0f, 200.0f, -20.0f};
+
+  state->sky = std::make_unique<Sky>();
 
   return SDL_APP_CONTINUE;
 }
@@ -168,9 +173,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   state->camera->HandleKeyboardEvent(state->keyboard);
 
-  glEnable(GL_DEPTH_TEST);
   glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  state->sky->Render(state->projection, state->camera->GetView());
+
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
