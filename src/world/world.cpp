@@ -56,6 +56,7 @@ void World::Update(const glm::vec3 &playerPosition) {
     return;
   }
 
+  // TODO: Need to refactor this so we don't have to wait on the main thread for the threads to finish
   for (auto *thread : threads) {
     int status;
     SDL_WaitThread(thread, &status);
