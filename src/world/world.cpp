@@ -14,12 +14,29 @@ int GenerateChunkVertices(void *data) {
 }
 
 World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), mChunkDimensions(chunkDimensions) {
-  auto profiler = Profiler::Create();
   TextureAtlasBuilder atlasBuilder(16);
   atlasBuilder.AddTexture(TextureType::Dirt, "assets/textures/dirt.png");
   // atlasBuilder.AddTexture(TextureType::Dirt, "assets/textures/sand.png");
   mTextureAtlas = atlasBuilder.Build();
-  profiler.LogSnapshot("TextureAtlas build");
+
+  Update({0, 0, 0});
+}
+
+World::~World() {
+  for (auto &entry : mChunks) {
+    delete entry.second;
+  }
+
+  mChunks.clear();
+}
+
+void World::Update(const glm::vec3 &playerPosition) {
+  auto profiler = Profiler::Create();
+  const glm::ivec3 currentChunk{
+      static_cast<int>(std::floor(playerPosition.x / mChunkDimensions.x)),
+      0,
+      static_cast<int>(std::floor(playerPosition.z / mChunkDimensions.z)),
+  };
 
   glm::ivec3 dim = {5, 1, 5};
 
@@ -27,14 +44,17 @@ World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), m
   for (int x = -dim.x; x < dim.x; ++x) {
     for (int y = -dim.y; y < dim.y; ++y) {
       for (int z = -dim.z; z < dim.z; ++z) {
-        auto *thread = EnsureChunkExists({x, y, z});
+        auto *thread = EnsureChunkExists({currentChunk.x + x, currentChunk.y + y, currentChunk.z + z});
         if (thread != nullptr) {
           threads.push_back(thread);
         }
       }
     }
   }
-  profiler.LogSnapshot("Chunk generation");
+
+  if (threads.size() == 0) {
+    return;
+  }
 
   for (auto *thread : threads) {
     int status;
@@ -46,14 +66,6 @@ World::World(const int seed, const glm::ivec3 &chunkDimensions) : mSeed(seed), m
   }
 
   profiler.LogEnd("World building completed");
-}
-
-World::~World() {
-  for (auto &entry : mChunks) {
-    delete entry.second;
-  }
-
-  mChunks.clear();
 }
 
 SDL_Thread *World::EnsureChunkExists(const glm::ivec3 &chunkPosition) {

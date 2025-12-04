@@ -172,6 +172,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   GameState *state = static_cast<GameState *>(appstate);
 
   state->camera->HandleKeyboardEvent(state->keyboard);
+  state->world->Update(state->camera->GetPosition());
 
   glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

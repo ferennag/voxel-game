@@ -14,6 +14,7 @@ public:
   World(const int seed, const glm::ivec3 &chunkDimensions);
   ~World();
 
+  void Update(const glm::vec3 &playerPosition);
   void Render(const Shader &shader);
 
 private:

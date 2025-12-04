@@ -26,6 +26,7 @@ struct Vertex {
 };
 
 struct Chunk {
+  bool mReady;
   VoxelGrid mGrid;
   glm::ivec3 mPosition, mDimensions;
   int mSeed;

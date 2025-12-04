@@ -4,7 +4,7 @@
 #include <SDL3_image/SDL_image.h>
 
 Chunk::Chunk(const TextureAtlas &atlas, const glm::ivec3 &position, const glm::ivec3 &dimensions, int seed)
-    : mPosition(position), mDimensions(dimensions), mSeed(seed), mTextureAtlas(atlas) {
+    : mReady(false), mPosition(position), mDimensions(dimensions), mSeed(seed), mTextureAtlas(atlas) {
 }
 
 void Chunk::GenerateVertices() {
@@ -77,6 +77,10 @@ void Chunk::GenerateVertices() {
 }
 
 void Chunk::SetupVAO() {
+  if (mReady) {
+    return;
+  }
+
   glCreateVertexArrays(1, &mVao);
   glCreateBuffers(1, &mVbo);
   glBindVertexArray(mVao);
@@ -88,6 +92,7 @@ void Chunk::SetupVAO() {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)(offsetof(Vertex, normal)));
   glEnableVertexAttribArray(2);
+  mReady = true;
 }
 
 Chunk::~Chunk() {
@@ -96,6 +101,10 @@ Chunk::~Chunk() {
 }
 
 void Chunk::Render() {
+  if (!mReady) {
+    return;
+  }
+
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glBindVertexArray(mVao);
   glDrawArrays(GL_TRIANGLES, 0, mVertices.size());
