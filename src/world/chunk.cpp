@@ -13,7 +13,7 @@ void Chunk::GenerateVertices() {
   FastNoiseLite noise;
   noise.SetSeed(mSeed);
   noise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
-  noise.SetFrequency(0.010);
+  noise.SetFrequency(0.005);
   noise.SetFractalType(FastNoiseLite::FractalType_FBm);
 
   for (int z = 0; z < VoxelGrid::SIZE; ++z) {
@@ -26,7 +26,7 @@ void Chunk::GenerateVertices() {
       value = (value + 1.0f / 2.0f);
 
       int height = std::floor(value * VoxelGrid::SIZE);
-      u64 column = (1 << height) - 1;
+      u64 column = (static_cast<u64>(1) << height) - 1;
       grid.columns[x * VoxelGrid::SIZE + z] = column;
     }
   }

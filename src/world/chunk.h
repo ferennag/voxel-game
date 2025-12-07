@@ -15,7 +15,7 @@ struct VoxelGrid {
   u64 columns[SIZE * SIZE];
 
   bool operator()(int x, int y, int z) const {
-    return columns[x * SIZE + z] & (1 << y);
+    return columns[x * SIZE + z] & (static_cast<u64>(1) << y);
   }
 };
 

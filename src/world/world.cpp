@@ -42,12 +42,10 @@ void World::Update(const glm::vec3 &playerPosition) {
 
   std::vector<SDL_Thread *> threads;
   for (int x = -dim.x; x < dim.x; ++x) {
-    for (int y = -dim.y; y < dim.y; ++y) {
-      for (int z = -dim.z; z < dim.z; ++z) {
-        auto *thread = EnsureChunkExists({currentChunk.x + x, currentChunk.y + y, currentChunk.z + z});
-        if (thread != nullptr) {
-          threads.push_back(thread);
-        }
+    for (int z = -dim.z; z < dim.z; ++z) {
+      auto *thread = EnsureChunkExists({currentChunk.x + x, 0, currentChunk.z + z});
+      if (thread != nullptr) {
+        threads.push_back(thread);
       }
     }
   }
